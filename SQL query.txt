@@ -1,0 +1,100 @@
+#Total number of fraud transactions
+SELECT COUNT(*) as Fraud_count
+FROM fraud_detection.fraudtrain 
+WHERE is_fraud=1;
+#Average fraud transaction amount
+SELECT ROUND(AVG(amt),2) as AVG_FRAUD_AMT
+FROM fraud_detection.fraudtrain 
+WHERE is_fraud=1;
+#Top 5 merchants by total fraud_amount
+SELECT merchant, SUM(amt) as Tot_fraud_amt
+FROM fraud_detection.fraudtrain 
+WHERE is_fraud=1
+GROUP BY merchant
+ORDER BY Tot_fraud_amt DESC
+LIMIT 5;
+#Percentage of fradulent transactions per merchant
+SELECT*FROM(
+SELECT merchant,(COUNT(CASE WHEN is_fraud=1 THEN 1 END)*100/count(*) )AS fraud_percent
+FROM fraud_detection.fraudtrain
+GROUP BY merchant
+ORDER BY fraud_percent DESC) AS T
+WHERE fraud_percent>1;
+#Number of fraud transactions per month
+SELECT DATE_FORMAT(trans_date_trans_time, '%m') as month,COUNT(*) AS num_fraud_transact
+FROM fraud_detection.fraudtrain 
+WHERE is_fraud=1
+GROUP BY month
+ORDER BY num_fraud_transact DESC;
+#TOP 5 cities with number of fraud transactions
+SELECT city,COUNT(*) as num_fraud_transact
+FROM fraud_detection.fraudtrain 
+WHERE is_fraud=1
+GROUP BY city
+ORDER BY num_fraud_transact DESC
+LIMIT 5;
+#Average fradulent transaction amount per card holder by gender
+SELECT gender,ROUND(AVG(amt),2)as avg_fraud_amt
+FROM fraud_detection.fraudtrain 
+WHERE is_fraud=1
+group by gender;
+#highest risk merchant based on fraud percentage
+SELECT merchant,COUNT(*) as total_transactions,
+SUM(CASE WHEN is_fraud=1 THEN 1 ELSE 0 END) AS fraud_transact,
+(SUM(CASE WHEN is_fraud=1 THEN 1 ELSE 0 END)/COUNT(*))*100 AS fraud_percent
+FROM fraud_detection.fraudtrain 
+GROUP BY merchant
+ORDER BY fraud_percent DESC
+LIMIT 1;
+#Fraud patterns by time of day(top 6)
+SELECT HOUR(trans_date_trans_time) AS hour_of_day,COUNT(*) as total_transact,
+COUNT(CASE WHEN is_fraud=1 THEN 1 END) as fraud_transact
+FROM fraud_detection.fraudtrain 
+GROUP BY hour_of_day
+ORDER BY fraud_transact DESC
+LIMIT 6;
+#Fraud numbers and percentage based on gender
+SELECT gender,COUNT(*) AS total_transactions,
+COUNT(CASE WHEN is_fraud=1 THEN 1  END) AS num_fraud_transact,
+(COUNT(CASE WHEN is_fraud=1 THEN 1 END)/COUNT(*))*100 AS fraud_percent
+FROM fraud_detection.fraudtrain 
+GROUP BY gender;
+#Top fraud per category 
+SELECT category,COUNT(*) as total_transact,
+COUNT(CASE WHEN is_fraud=1 THEN 1 END) AS fraud_transact,
+ROUND(COUNT(CASE WHEN is_fraud=1 THEN 1 END)*100/COUNT(*),2) as fraud_percent
+FROM fraud_detection.fraudtrain 
+GROUP BY category
+HAVING fraud_percent>1
+ORDER BY fraud_percent DESC;
+#LEAST fraud per category 
+SELECT category,COUNT(*) as total_transact,
+COUNT(CASE WHEN is_fraud=1 THEN 1 END) AS fraud_transact,
+ROUND(COUNT(CASE WHEN is_fraud=1 THEN 1 END)*100/COUNT(*),2) as fraud_percent
+FROM fraud_detection.fraudtrain 
+GROUP BY category
+HAVING fraud_percent<1
+ORDER BY fraud_percent;
+#TOP FRAUD percentage by state
+SELECT state,COUNT(*) AS total_transact,
+COUNT(CASE WHEN is_fraud=1 THEN 1 END) as total_fraud_transact,
+ROUND(COUNT(CASE WHEN is_fraud=1 THEN 1 END)*100/COUNT(*),2) AS fraud_percent
+FROM fraud_detection.fraudtrain 
+GROUP BY state
+HAVING fraud_percent>1
+ORDER BY fraud_percent DESC;
+#NO FRAUD percentage by state
+SELECT state,COUNT(*) AS total_transact,
+COUNT(CASE WHEN is_fraud=1 THEN 1 END) as total_fraud_transact,
+ROUND(COUNT(CASE WHEN is_fraud=1 THEN 1 END)*100/COUNT(*),2) AS fraud_percent
+FROM fraud_detection.fraudtrain 
+GROUP BY state
+HAVING fraud_percent=0;
+#least fraud percentage by state
+SELECT state,COUNT(*) AS total_transact,
+COUNT(CASE WHEN is_fraud=1 THEN 1 END) as total_fraud_transact,
+ROUND(COUNT(CASE WHEN is_fraud=1 THEN 1 END)*100/COUNT(*),2) AS fraud_percent
+FROM fraud_detection.fraudtrain 
+GROUP BY state
+HAVING fraud_percent>0 AND fraud_percent<1
+ORDER BY fraud_percent DESC;
